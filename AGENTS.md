@@ -6,7 +6,7 @@ the build**. Most additions are pure data files you can drop in - no UI or wirin
 changes required. You can even do it entirely from the GitHub web UI; every push
 to `main` triggers a build + test + deploy to GitHub Pages.
 
-> Live site: https://adoucett.github.io/Piano/ (Chrome/Edge for live MIDI)
+> Live site: https://adoucett.github.io/piano/ (Chrome/Edge for live MIDI)
 
 ## TL;DR for "add a lesson right now"
 

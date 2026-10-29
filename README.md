@@ -6,7 +6,7 @@ keyboard). Designed for a player with a strong ear but weak sight-reading: every
 note is shown on the staff *and* labeled by letter name, with reading aids that
 fade as you improve.
 
-Live site: **https://adoucett.github.io/Piano/** (use Chrome or Edge for MIDI).
+Live site: **https://adoucett.github.io/piano/** (use Chrome or Edge for MIDI).
 
 ## Features
 
@@ -58,7 +58,7 @@ are in [`src/teachers/README.md`](src/teachers/README.md).
 ## Deployment
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds and
-publishes to GitHub Pages. The Vite `base` is `/Piano/` in production.
+publishes to GitHub Pages. The Vite `base` is `/piano/` in production.
 
 ## Tech
 

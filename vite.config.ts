@@ -3,9 +3,9 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 export default defineConfig(({ mode }) => ({
-  // GitHub Pages serves this project at https://adoucett.github.io/Piano/.
-  // Use that base in production, root in dev.
-  base: mode === "production" ? "/Piano/" : "/",
+  // GitHub Pages serves this project at https://adoucett.github.io/piano/.
+  // Use that base in production, root in dev. (Path is case-sensitive.)
+  base: mode === "production" ? "/piano/" : "/",
   plugins: [react()],
   resolve: {
     alias: {
