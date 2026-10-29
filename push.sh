@@ -47,4 +47,5 @@ git -c credential.helper= \
     -c credential.helper='!f() { echo "username=${GITHUB_USER}"; echo "password=${GITHUB_PAT}"; }; f' \
   push -u origin "$BRANCH" "$@"
 
-echo "==> Done. Actions will build and deploy to https://adoucett.github.io/Piano/"
+REPO_NAME="${GITHUB_REPO#*/}"
+echo "==> Done. Actions will build and deploy to https://adoucett.github.io/${REPO_NAME}/"
