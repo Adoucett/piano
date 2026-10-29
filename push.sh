@@ -40,8 +40,11 @@ BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 echo "==> Pushing $BRANCH to $REMOTE_URL"
 
 # Credential helper reads the exported GITHUB_* env vars at runtime.
+# The leading empty `credential.helper=` resets any inherited helpers (e.g. the
+# macOS keychain), so ONLY our token is used - not a stale cached credential.
 export GITHUB_USER GITHUB_PAT
-git -c credential.helper='!f() { echo "username=${GITHUB_USER}"; echo "password=${GITHUB_PAT}"; }; f' \
+git -c credential.helper= \
+    -c credential.helper='!f() { echo "username=${GITHUB_USER}"; echo "password=${GITHUB_PAT}"; }; f' \
   push -u origin "$BRANCH" "$@"
 
 echo "==> Done. Actions will build and deploy to https://adoucett.github.io/Piano/"

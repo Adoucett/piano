@@ -47,6 +47,14 @@ npm test           # unit tests (theory spelling, patterns, matcher, teachers)
 npm run build      # production build to dist/
 ```
 
+## Extending (add teachers, lessons, scales)
+
+Content is data-driven and auto-discovered - most additions are a single file you
+can drop in (even from the GitHub web UI). See **[AGENTS.md](AGENTS.md)** for
+copy-paste recipes and the list of valid scale/pattern ids; it is written so an
+AI agent or a human can add a lesson in under a minute. Teacher-specific details
+are in [`src/teachers/README.md`](src/teachers/README.md).
+
 ## Deployment
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds and
