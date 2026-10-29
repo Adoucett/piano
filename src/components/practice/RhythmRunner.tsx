@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "motion/react";
-import { Play, Square } from "lucide-react";
+import { Headphones, Play, Square } from "lucide-react";
 import type { RunSummary } from "@/types";
 import { buildRhythm, getRhythmDrill } from "@/rhythm/drills";
 import { Matcher, type PlayedEvent } from "@/practice/matcher";
 import { transport } from "@/practice/transport";
-import { audioNow } from "@/audio/context";
+import { audioNow, getAudioContext } from "@/audio/context";
+import { hat, woodblock } from "@/audio/backing";
 import { useNoteEvents } from "@/hooks/useInput";
 import type { NoteEvent } from "@/practice/inputBus";
 import { rhythmKey, useProgress } from "@/store/progress";
@@ -32,6 +33,7 @@ export function RhythmRunner({ drillId, onNext, nextLabel }: { drillId: string; 
   const [clock, setClock] = useState({ t0: 0, spb: 60 / drill.bpm });
   const [result, setResult] = useState<{ summary: RunSummary; outcome: RunOutcome; errors: number[]; accentContrast: number | null; prevAcc: number | null } | null>(null);
   const matcherRef = useRef<Matcher | null>(null);
+  const targetTimesRef = useRef<number[]>([]);
   const rafRef = useRef<number | null>(null);
   const finished = useRef(false);
 
@@ -95,6 +97,7 @@ export function RhythmRunner({ drillId, onNext, nextLabel }: { drillId: string; 
     });
     setClock({ t0, spb: transport.spb });
     const times = built.playBeats.map((b) => transport.beatTime(b));
+    targetTimesRef.current = times;
     matcherRef.current = new Matcher(built.notes, {
       mode: "tempo",
       pitch: drill.kind === "poly" ? "hand" : "any",
@@ -146,6 +149,16 @@ export function RhythmRunner({ drillId, onNext, nextLabel }: { drillId: string; 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [start, reset, onNext]);
+
+  const replay = useCallback(() => {
+    void getAudioContext().resume();
+    const target = targetTimesRef.current;
+    if (!target.length) return;
+    const origin = target[0];
+    const at = audioNow() + 0.25;
+    for (const t of target) woodblock(at + (t - origin), false, 0.8);
+    for (const e of events) if (e.kind !== "extra" || e.time >= origin - 0.3) hat(at + (e.time - origin), 1);
+  }, [events]);
 
   const windowBeats = (matcherRef.current?.window ?? 0.12) / clock.spb;
   const s = result?.summary;
@@ -242,6 +255,12 @@ export function RhythmRunner({ drillId, onNext, nextLabel }: { drillId: string; 
             onFaster={() => setBpm((b) => Math.min(240, b + 4))}
           >
             <TimingHistogram errors={result.errors} />
+            <div className="mt-3 flex items-center gap-3">
+              <Button size="sm" variant="ghost" onClick={replay}>
+                <Headphones className="h-3.5 w-3.5" /> Replay against target
+              </Button>
+              <span className="text-xs text-fg-3">Woodblock is the target, hi-hat is your take. Flams are timing errors.</span>
+            </div>
           </ResultsSheet>
         )}
       </AnimatePresence>

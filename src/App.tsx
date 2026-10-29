@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useRef } from "react";
 import { Toaster, toast } from "sonner";
+import { MotionConfig } from "motion/react";
 import { Sidebar } from "@/components/Sidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { TooltipProvider } from "@/components/ui";
@@ -83,6 +84,7 @@ export default function App() {
   };
 
   return (
+    <MotionConfig reducedMotion="user">
     <TooltipProvider>
       <div className="flex h-full bg-bg-0 text-fg-1">
         {!full && <Sidebar active={page} />}
@@ -101,5 +103,6 @@ export default function App() {
         }}
       />
     </TooltipProvider>
+    </MotionConfig>
   );
 }

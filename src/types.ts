@@ -136,6 +136,12 @@ export interface ExerciseSpec {
   startOctave?: number;
   /** When set, the exercise runs over a chord progression instead of one scale. */
   progressionId?: string;
+  /** Chord the line is played over (suffix such as "7alt", "m6"); defaults to the scale's chord. */
+  chord?: string;
+  /** Feel requested by a lesson; overrides the "auto" swing policy. */
+  feel?: "straight" | "swing";
+  /** Suggested tempo from a lesson. */
+  bpm?: number;
   /** Optional provenance for UI/progress (curriculum unit or teacher lesson). */
   source?: {
     kind: "library" | "curriculum" | "teacher" | "review" | "session";

@@ -21,6 +21,9 @@ export function lessonExercises(teacher: Teacher, lesson: Lesson): ExerciseSpec[
         octaves: step.octaves ?? 1,
         startOctave: step.startOctave,
         progressionId: step.progressionId,
+        chord: step.chord,
+        feel: step.rhythm,
+        bpm: step.bpm,
         source: {
           kind: "teacher",
           teacherId: teacher.id,

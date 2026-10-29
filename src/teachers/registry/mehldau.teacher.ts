@@ -51,6 +51,7 @@ const mehldau: Teacher = {
         {
           scaleId: "lydian-dominant",
           patternId: "upDown",
+          chord: "7#11",
           keyOrder: "fourths",
           octaves: 2,
           instruction:

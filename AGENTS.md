@@ -130,6 +130,7 @@ const contribution: LessonContribution = {
         patternId: "sevenths",
         keyOrder: "fourths", // or keys: ["Db","Gb","B"]
         octaves: 2,
+        chord: "7#11", // optional: chord suffix on the key; sets the symbol and chord-tone coloring
         instruction: "What this step is for, in plain direct language.",
       },
       {
@@ -138,8 +139,8 @@ const contribution: LessonContribution = {
         patternId: "guideTones",
         progressionId: "ii-V-I-major",
         keys: ["C", "F", "Bb"],
-        rhythm: "swing", // optional: "straight" | "swing"
-        bpm: 120,        // optional suggested tempo
+        rhythm: "swing", // optional: "straight" | "swing" (overrides the auto swing policy)
+        bpm: 120,        // optional: sets the tempo when the step opens
         instruction: "3rds and 7ths only; move each voice by the nearest step.",
       },
     ],
@@ -262,6 +263,7 @@ If the Action turns red, it is almost always one of:
 
 - an unknown `scaleId` / `patternId` / `progressionId` (typo - check the lists above),
 - a progression-only pattern used without a `progressionId`,
+- a `chord` suffix that tonal does not recognise (e.g. use `"m7b5"`, not `"half-dim"`),
 - a duplicate `id`,
 - a TypeScript syntax error in the new file.
 

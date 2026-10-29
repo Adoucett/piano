@@ -101,6 +101,11 @@ export function ExerciseRunner({
     setPhaseBoth("ready");
   }, [ex, pitchMode, settings.bpm]);
 
+  const suggestedBpm = ex.spec.bpm;
+  useEffect(() => {
+    if (suggestedBpm) setSettings({ bpm: suggestedBpm });
+  }, [ex.spec, suggestedBpm, setSettings]);
+
   useEffect(() => {
     reset();
     return () => {

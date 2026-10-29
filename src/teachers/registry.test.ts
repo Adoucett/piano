@@ -4,6 +4,7 @@ import { lessonExercises } from "./resolve";
 import { buildExercise, buildProgression, PATTERN_BY_ID } from "@/exercises/patterns";
 import { PROGRESSION_BY_ID } from "@/exercises/progressions";
 import { SCALE_BY_ID } from "@/theory/catalog";
+import { isKnownChord } from "@/theory/engine";
 
 describe("teacher registry", () => {
   it("auto-discovers at least the starter teachers", () => {
@@ -33,6 +34,7 @@ describe("teacher registry", () => {
           expect(SCALE_BY_ID[step.scaleId], `${where}:${step.scaleId}`).toBeTruthy();
           expect(PATTERN_BY_ID[step.patternId], `${where}:${step.patternId}`).toBeTruthy();
           if (step.progressionId) expect(PROGRESSION_BY_ID[step.progressionId], `${where}:${step.progressionId}`).toBeTruthy();
+          if (step.chord) expect(isKnownChord(step.chord), `${where}:chord ${step.chord}`).toBe(true);
         }
     }
   });

@@ -365,6 +365,7 @@ export interface Exercise {
 export function lineSwing(ex: Exercise, s: { swingLines: "auto" | "on" | "off"; swing: number }): number {
   if (s.swingLines === "off") return 0.5;
   if (s.swingLines === "on") return s.swing;
+  if (ex.spec.feel) return ex.spec.feel === "swing" ? s.swing : 0.5;
   const src = ex.spec.source;
   const jazz =
     !!ex.progression ||
@@ -449,9 +450,9 @@ export function buildExercise(spec: ExerciseSpec): Exercise {
   const seed = `${spec.key}|${spec.scaleId}|${new Date().toDateString()}`;
   const line = generateLine(info, spec.patternId, { octaves: spec.octaves, startOctave: spec.startOctave, seed });
   const beatsPerBar = 4;
-  const timed = assignBeats(withRoles(line.notes, info.tonic, info.chordSuffix), line.durations, line.pickup);
+  const suffix = spec.chord ?? info.chordSuffix;
+  const timed = assignBeats(withRoles(line.notes, info.tonic, suffix), line.durations, line.pickup);
   const { notes, totalBeats, bars } = finalize(timed, beatsPerBar);
-  const suffix = info.chordSuffix;
   const chords: ChordMark[] =
     !pattern?.hideChords && suffix && def.id !== "chromatic"
       ? [{ beat: 0, root: info.tonic, suffix, symbol: prettyChord(info.tonic, suffix) }]

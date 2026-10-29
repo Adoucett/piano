@@ -18,6 +18,8 @@ export interface LessonStep {
   keyOrder?: KeyOrder;
   octaves?: number;
   startOctave?: number;
+  /** Optional chord to play the line over, as a suffix on the key (e.g. "7alt", "m6", "maj7#11"). Sets the chord symbol and chord-tone coloring. */
+  chord?: string;
   /** Optional rhythmic feel the teacher wants for this step. */
   rhythm?: "straight" | "swing";
   /** Optional suggested tempo. */

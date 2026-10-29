@@ -200,6 +200,11 @@ const SUFFIX_FALLBACK: Record<string, string> = {
  * Semitone classes (relative to the root) of a chord's core tones:
  * root, third, fifth, seventh (or 6th). Extensions are tensions.
  */
+/** Whether a chord suffix (as used in lesson steps) can be colored and labeled. */
+export function isKnownChord(suffix: string): boolean {
+  return suffix === "7alt" || !!SUFFIX_FALLBACK[suffix] || !Chord.get(`C${suffix}`).empty;
+}
+
 export function chordCore(suffix: string): number[] {
   if (suffix === "7alt") return [0, 4, 10];
   const s = SUFFIX_FALLBACK[suffix] && Chord.get(`C${suffix}`).empty ? SUFFIX_FALLBACK[suffix] : suffix;
