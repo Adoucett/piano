@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Headphones, Play, Search, Square } from "lucide-react";
+import { ChevronDown, Headphones, Play, Search, Square } from "lucide-react";
 import { Button, Card, Eyebrow, Pill, Segmented } from "@/components/ui";
 import { StaffView } from "@/components/StaffView";
 import { KeyboardView } from "@/components/KeyboardView";
@@ -192,21 +192,28 @@ function KeyChips({ value, onChange }: { value: string; onChange: (k: string) =>
   );
 }
 
+const PRIMARY_PATTERNS: PatternId[] = ["upDown", "ascending", "descending", "thirds", "fourths", "sevenths", "digital1235", "guideTones"];
+
 function PatternChips({ options, value, onChange }: { options: { id: PatternId; name: string }[]; value: PatternId; onChange: (p: PatternId) => void }) {
+  const [more, setMore] = useState(false);
+  const primary = options.filter((p) => PRIMARY_PATTERNS.includes(p.id)).slice(0, 6);
+  const shown = more ? options : primary.some((p) => p.id === value) ? primary : [...primary, ...options.filter((p) => p.id === value)];
+  const hidden = options.length - shown.length;
+  const chip = (active: boolean) =>
+    cn("h-7 rounded-full px-3 text-xs transition-colors", active ? "bg-line/[0.1] text-fg-1" : "text-fg-3 hover:bg-line/[0.04] hover:text-fg-1");
   return (
     <div className="flex flex-wrap gap-1">
-      {options.map((p) => (
-        <button
-          key={p.id}
-          onClick={() => onChange(p.id)}
-          className={cn(
-            "h-7 rounded-full px-3 text-xs transition-colors",
-            value === p.id ? "bg-line/[0.1] text-fg-1" : "text-fg-3 hover:bg-line/[0.04] hover:text-fg-1"
-          )}
-        >
+      {shown.map((p) => (
+        <button key={p.id} onClick={() => onChange(p.id)} className={chip(value === p.id)}>
           {p.name}
         </button>
       ))}
+      {(hidden > 0 || more) && (
+        <button onClick={() => setMore((m) => !m)} className="flex h-7 items-center gap-1 rounded-full px-3 text-xs text-fg-2 hover:bg-line/[0.04] hover:text-fg-1">
+          {more ? "Fewer" : `${hidden} more`}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", more && "rotate-180")} />
+        </button>
+      )}
     </div>
   );
 }

@@ -29,63 +29,75 @@ export function RhythmLane({
   poly?: boolean;
 }) {
   const beatsTotal = bars * 4;
+  const barsPerRow = Math.min(4, bars);
+  const rowBeats = barsPerRow * 4;
+  const rows = Math.ceil(bars / barsPerRow);
   const W = 1000;
-  const laneH = poly ? 44 : 64;
+  const laneH = poly ? 56 : 96;
   const lanes = poly ? ["R", "L"] : ["any"];
-  const H = lanes.length * laneH + 28;
-  const x = (beat: number) => 12 + (beat / beatsTotal) * (W - 24);
+  const rowH = lanes.length * laneH + 26;
+  const H = rows * rowH + 4;
+  const rowOf = (beat: number) => Math.max(0, Math.min(rows - 1, Math.floor(beat / rowBeats)));
+  const xIn = (beatInRow: number) => 16 + (beatInRow / rowBeats) * (W - 32);
+  const x = (beat: number, row = rowOf(beat)) => xIn(beat - row * rowBeats);
+  const top = (row: number) => row * rowH + 18;
   const laneOf = (n: { hand?: "L" | "R" }) => (poly ? (n.hand === "L" ? 1 : 0) : 0);
-  const midY = (lane: number) => 20 + lane * laneH + laneH / 2;
+  const midY = (lane: number, row: number) => top(row) + lane * laneH + laneH / 2;
+  const bw = xIn(4) - xIn(0);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="block w-full">
-      {Array.from({ length: bars }).map((_, b) =>
-        callBars?.(b) ? (
-          <g key={`call-${b}`}>
-            <rect x={x(b * 4)} y={16} width={x(4) - x(0)} height={H - 20} fill="rgb(var(--info) / 0.06)" />
-            <text x={x(b * 4) + 8} y={13} fontSize={11} fill="rgb(var(--info))" fontFamily="Geist Variable, sans-serif">
-              Listen
+      {Array.from({ length: bars }).map((_, b) => {
+        const row = Math.floor(b / barsPerRow);
+        const bx = xIn((b % barsPerRow) * 4);
+        return (
+          <g key={`bar-${b}`}>
+            {callBars?.(b) && <rect x={bx} y={top(row)} width={bw} height={lanes.length * laneH} fill="rgb(var(--info) / 0.06)" />}
+            <text x={bx + 4} y={top(row) - 5} fontSize={11} fill={callBars?.(b) ? "rgb(var(--info))" : "rgb(var(--text-3))"} fontFamily="Geist Mono, monospace">
+              {b + 1}
+              {callBars?.(b) ? "  listen" : ""}
             </text>
+            {Array.from({ length: 4 }).map((_, k) => (
+              <line
+                key={k}
+                x1={bx + (k * bw) / 4}
+                x2={bx + (k * bw) / 4}
+                y1={top(row)}
+                y2={top(row) + lanes.length * laneH}
+                stroke={k === 0 ? "rgb(var(--line) / 0.22)" : "rgb(var(--line) / 0.07)"}
+                strokeWidth={k === 0 ? 1.2 : 1}
+              />
+            ))}
+            {(b + 1) % barsPerRow === 0 || b === bars - 1 ? (
+              <line x1={bx + bw} x2={bx + bw} y1={top(row)} y2={top(row) + lanes.length * laneH} stroke="rgb(var(--line) / 0.22)" strokeWidth={1.2} />
+            ) : null}
           </g>
-        ) : null
-      )}
-      {Array.from({ length: beatsTotal + 1 }).map((_, b) => (
-        <line
-          key={b}
-          x1={x(b)}
-          x2={x(b)}
-          y1={18}
-          y2={H - 6}
-          stroke={b % 4 === 0 ? "rgb(var(--line) / 0.22)" : "rgb(var(--line) / 0.07)"}
-          strokeWidth={b % 4 === 0 ? 1.2 : 1}
-        />
-      ))}
-      {Array.from({ length: bars }).map((_, b) => (
-        <text key={`n-${b}`} x={x(b * 4) + 4} y={H - 8} fontSize={10} fill="rgb(var(--text-3))" fontFamily="Geist Mono, monospace">
-          {b + 1}
-        </text>
-      ))}
+        );
+      })}
       {poly &&
-        lanes.map((l, i) => (
-          <text key={l} x={2} y={midY(i) + 4} fontSize={10} fill="rgb(var(--text-3))" fontFamily="Geist Variable, sans-serif">
-            {l}
-          </text>
-        ))}
+        Array.from({ length: rows }).map((_, r) =>
+          lanes.map((l, i) => (
+            <text key={`${r}-${l}`} x={2} y={midY(i, r) + 4} fontSize={10} fill="rgb(var(--text-3))" fontFamily="Geist Variable, sans-serif">
+              {l}
+            </text>
+          ))
+        )}
       {notes.map((n, i) => {
         const b = playBeats[i];
-        const lane = laneOf(n);
-        const y = midY(lane);
+        const row = rowOf(b);
+        const y = midY(laneOf(n), row);
         return (
           <g key={i}>
-            <rect
-              x={x(b - windowBeats)}
-              y={y - laneH * 0.32}
-              width={x(windowBeats * 2) - x(0)}
-              height={laneH * 0.64}
-              rx={4}
-              fill="rgb(var(--line) / 0.05)"
+            <rect x={x(b - windowBeats, row) + 1} y={y + laneH * 0.32} width={Math.max(2, xIn(windowBeats * 2) - xIn(0) - 2)} height={3} rx={1.5} fill="rgb(var(--line) / 0.12)" />
+            <line
+              x1={x(b, row)}
+              x2={x(b, row)}
+              y1={y - laneH * 0.26}
+              y2={y + laneH * 0.26}
+              stroke={n.accent ? "rgb(var(--text-1))" : "rgb(var(--text-3))"}
+              strokeOpacity={n.accent ? 1 : 0.6}
+              strokeWidth={n.accent ? 2.4 : 1.4}
             />
-            <line x1={x(b)} x2={x(b)} y1={y - laneH * 0.3} y2={y + laneH * 0.3} stroke="rgb(var(--text-2))" strokeWidth={n.accent ? 2.6 : 1.4} />
           </g>
         );
       })}
@@ -93,15 +105,17 @@ export function RhythmLane({
         const beat = (e.time - t0) / spb;
         if (beat < -1 || beat > beatsTotal + 1) return null;
         const n = e.index != null ? notes[e.index] : undefined;
+        const row = n && e.index != null ? rowOf(playBeats[e.index]) : rowOf(beat);
         const lane = n ? laneOf(n) : poly ? (e.midi < 60 ? 1 : 0) : 0;
         const err = e.index != null ? (e.time - (t0 + playBeats[e.index] * spb)) * 1000 : null;
         const fill =
           e.kind !== "hit" ? "rgb(var(--error))" : err != null && Math.abs(err) <= 20 ? "rgb(var(--success))" : err != null && Math.abs(err) <= 40 ? "rgb(var(--accent))" : "rgb(var(--error))";
-        return <circle key={i} cx={x(beat)} cy={midY(lane)} r={4.5} fill={fill} opacity={e.kind === "extra" ? 0.5 : 0.95} />;
+        return <circle key={i} cx={x(beat, row)} cy={midY(lane, row)} r={5} fill={fill} opacity={e.kind === "extra" ? 0.5 : 0.95} />;
       })}
-      {playheadBeat != null && playheadBeat >= 0 && playheadBeat <= beatsTotal && (
-        <line x1={x(playheadBeat)} x2={x(playheadBeat)} y1={14} y2={H - 4} stroke="rgb(var(--accent))" strokeWidth={2} />
-      )}
+      {playheadBeat != null && playheadBeat >= 0 && playheadBeat <= beatsTotal && (() => {
+        const row = rowOf(Math.min(playheadBeat, beatsTotal - 0.001));
+        return <line x1={x(playheadBeat, row)} x2={x(playheadBeat, row)} y1={top(row) - 2} y2={top(row) + lanes.length * laneH + 2} stroke="rgb(var(--accent))" strokeWidth={2} />;
+      })()}
     </svg>
   );
 }

@@ -38,8 +38,9 @@ export default function SettingsPage() {
   const up = <K extends keyof Settings>(k: K) => (v: Settings[K]) => set({ [k]: v } as Partial<Settings>);
 
   return (
-    <PageShell className="max-w-[820px]">
+    <PageShell>
       <PageTitle title="Settings" />
+      <div className="max-w-[820px]">
 
       <Section title="Sound">
         <Row label="Sound source" hint="Auto uses the Nord when it is connected for output, otherwise the sampled grand.">
@@ -203,6 +204,7 @@ export default function SettingsPage() {
       </Section>
 
       <ProgressSection />
+      </div>
     </PageShell>
   );
 }

@@ -101,9 +101,9 @@ function Overview() {
                     );
                   })}
                 </div>
-                <div className="hidden w-48 shrink-0 text-right lg:block">
+                <div className="hidden w-56 shrink-0 text-right lg:block">
                   <div className="text-2xs uppercase tracking-[0.08em] text-fg-3">Now</div>
-                  <div className="truncate text-sm text-fg-1">{cur.title}</div>
+                  <div className="line-clamp-2 text-sm text-fg-1">{cur.title}</div>
                 </div>
                 <ArrowRight className="h-4 w-4 shrink-0 text-fg-3" />
               </div>
@@ -131,8 +131,8 @@ function TeacherCard({ teacher }: { teacher: Teacher }) {
   const lessons = teacher.lessons.length;
   return (
     <Card interactive className="group relative cursor-pointer overflow-hidden p-6" onClick={() => navigate(`/courses/teacher/${teacher.id}`)}>
-      <div className="absolute inset-y-0 left-0 w-[2px]" style={{ background: teacher.color, opacity: 0.7 }} />
-      <div className="text-2xs uppercase tracking-[0.08em]" style={{ color: teacher.color }}>
+      <div className="absolute inset-y-0 left-0 w-[2px] bg-accent/40" />
+      <div className="text-2xs uppercase tracking-[0.08em] text-accent/80">
         {teacher.style}
       </div>
       <div className="mt-2 font-serif text-[28px] leading-tight text-fg-1">{teacher.name}</div>
@@ -287,7 +287,7 @@ function TeacherDetail({ teacher }: { teacher: Teacher }) {
 
       <div className="grid gap-12 lg:grid-cols-[1fr_320px]">
         <div>
-          <div className="text-2xs uppercase tracking-[0.1em]" style={{ color: teacher.color }}>
+          <div className="text-2xs uppercase tracking-[0.1em] text-accent/80">
             {teacher.style}
             {teacher.era ? ` · ${teacher.era}` : ""}
           </div>

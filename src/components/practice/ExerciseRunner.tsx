@@ -322,7 +322,6 @@ export function ExerciseRunner({
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-fg-3">
               <span>{ex.subtitle}</span>
               {ex.info && <span className="font-mono text-xs text-fg-3">{ex.info.formula}</span>}
-              {ex.progression && <span>{ex.progression.description}</span>}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -342,7 +341,7 @@ export function ExerciseRunner({
           playheadBeat={phase === "running" || phase === "listening" ? playhead : null}
         />
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-6">
           <div className="max-w-[640px] text-sm text-fg-2">
             {instruction ?? ex.info?.def.tip ?? ex.progression?.description}
           </div>

@@ -44,7 +44,7 @@ export default function TodayPage() {
         <div>
           <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight text-fg-1">{greeting()}</h1>
           <p className="mt-2 text-sm text-fg-3">
-            {date} · <span className="font-mono tabular text-fg-2">{days}</span> {days === 1 ? "day" : "days"} this month
+            {date} · <span className="tabular text-fg-2">{days}</span> {days === 1 ? "day" : "days"} this month
             {due > 0 && (
               <>
                 {" "}
@@ -73,7 +73,7 @@ export default function TodayPage() {
         </Card>
       )}
 
-      <Card className="p-7">
+      <Card className="max-w-3xl p-7">
         <Eyebrow>Today's session · about {minutes} min</Eyebrow>
         <h2 className="mt-2 text-xl font-semibold tracking-tight text-fg-1">{plan.steps.map((s, i) => (i === 0 ? s.title : s.title.toLowerCase())).join(", ")}.</h2>
         <ol className="mt-6 space-y-3">
