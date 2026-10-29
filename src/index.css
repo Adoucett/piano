@@ -2,8 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens: "Graphite & Ivory".
+ * Colors are RGB channel triplets so Tailwind can apply alpha
+ * (e.g. `bg-surface-2/80`, `border-line/[0.06]`).
+ */
 :root {
   color-scheme: dark;
+
+  --bg-0: 12 13 15;
+  --bg-1: 17 18 21;
+  --surface-1: 22 24 27;
+  --surface-2: 28 30 34;
+  --surface-3: 36 39 44;
+  --line: 255 255 255;
+
+  --text-1: 236 234 230;
+  --text-2: 172 171 166;
+  --text-3: 136 135 130;
+  --text-4: 92 91 87;
+
+  --accent: 226 179 106;
+  --accent-hover: 237 194 131;
+  --on-accent: 26 20 8;
+
+  --success: 111 191 148;
+  --error: 224 122 111;
+  --info: 138 164 232;
+  --tension: 111 143 214;
+
+  /* The sheet: the one bright object on the screen. */
+  --paper: 242 237 227;
+  --ink: 30 28 25;
+  --sheet-line: 30 28 25;
+  --sheet-tension: 74 104 176;
+  --sheet-current: 168 104 18;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-0: 246 244 239;
+  --bg-1: 239 236 230;
+  --surface-1: 255 255 255;
+  --surface-2: 250 248 244;
+  --surface-3: 241 238 232;
+  --line: 0 0 0;
+
+  --text-1: 27 26 24;
+  --text-2: 95 93 88;
+  --text-3: 120 117 111;
+  --text-4: 168 165 158;
+
+  --accent: 176 127 46;
+  --accent-hover: 156 110 36;
+  --on-accent: 255 252 245;
+
+  --success: 61 150 104;
+  --error: 196 84 72;
+  --info: 76 106 196;
+  --tension: 76 106 196;
+}
+
+/* Night sheet: ivory ink on a dark sheet for late sessions. */
+[data-sheet="night"] {
+  --paper: 21 23 26;
+  --ink: 230 225 214;
+  --sheet-line: 230 225 214;
+  --sheet-tension: 150 175 232;
+  --sheet-current: 232 186 112;
 }
 
 html,
@@ -14,13 +81,82 @@ body,
 }
 
 body {
-  background-color: hsl(222 47% 8%);
-  color: hsl(210 40% 96%);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  background-color: rgb(var(--bg-0));
+  color: rgb(var(--text-1));
+  font-family: "Geist Variable", "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
 }
 
-/* VexFlow draws into an SVG; keep its text crisp */
-svg text {
-  user-select: none;
+::selection {
+  background: rgb(var(--accent) / 0.3);
+}
+
+/* Quiet, thin scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--line) / 0.12) transparent;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus rings: brass, never the browser default blue. */
+:focus-visible {
+  outline: 2px solid rgb(var(--accent) / 0.7);
+  outline-offset: 2px;
+}
+
+/* ---------- Sheet music state classes (applied to VexFlow SVG groups) ---------- */
+.sheet svg {
+  overflow: visible;
+}
+.sheet .vf-stavenote,
+.sheet .vf-stavenote path {
+  transition: fill 180ms cubic-bezier(0.22, 1, 0.36, 1), stroke 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sheet .is-played {
+  opacity: 0.45;
+}
+.sheet .is-current path {
+  fill: rgb(var(--sheet-current));
+  stroke: rgb(var(--sheet-current));
+}
+.sheet .is-hit path {
+  fill: rgb(var(--success));
+  stroke: rgb(var(--success));
+}
+.sheet .is-miss path {
+  fill: rgb(var(--error));
+  stroke: rgb(var(--error));
+}
+.sheet .is-miss {
+  opacity: 0.7;
+}
+
+.kb-flash {
+  animation: kb-flash 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: none;
+}
+@keyframes kb-flash {
+  from {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

@@ -5,9 +5,9 @@ const pop: Teacher = {
   name: "Remi Vale",
   style: "Pop / songwriter",
   era: "contemporary",
-  color: "hsl(330 81% 60%)",
+  color: "hsl(342 28% 66%)",
   tagline: "Four chords, big hooks, scales you can actually sing.",
-  bio: `I write songs for a living, so I care about what sounds good fast. You don't need twelve exotic scales to make people feel something - you need the major scale, its pentatonics, and enough Mixolydian and Dorian to add colour. I'll keep it simple and groovy.`,
+  bio: `Songwriter's piano: what sounds good, fast. You don't need twelve exotic scales to make people feel something. You need the major scale, its pentatonics, and enough Mixolydian and Dorian to add colour. Simple and groovy.`,
   philosophy: `Learn the shapes that show up in real songs and get them smooth in the five or six keys everyone actually plays in. Pentatonics are your safety net; major and its modes are your palette. Keep good time above all - a pop line lives and dies by the groove.`,
   scalarVocab: [
     "major",

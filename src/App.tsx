@@ -1,111 +1,105 @@
-import { useEffect, useState } from "react";
-import type { ExerciseSpec } from "@/types";
-import { useInitInput } from "@/hooks/useInput";
-import { useProgress, type ReadingKind } from "@/store/progress";
+import { Suspense, lazy, useEffect, useRef } from "react";
+import { Toaster, toast } from "sonner";
+import { Sidebar } from "@/components/Sidebar";
+import { CommandPalette } from "@/components/CommandPalette";
+import { TooltipProvider } from "@/components/ui";
+import { useRoute } from "@/lib/router";
+import { useInitInput, useInputStatus } from "@/hooks/useInput";
+import { useProgress } from "@/store/progress";
+import { sound } from "@/audio/sound";
+import { setBackingRouting } from "@/audio/backing";
 import { inputBus } from "@/practice/inputBus";
-import { AidControl, MidiStatus } from "@/components/TopControls";
-import { PracticeSession } from "@/components/PracticeSession";
-import { ReadingDrill } from "@/components/ReadingDrill";
-import { CurriculumPage } from "@/pages/CurriculumPage";
-import { LibraryPage } from "@/pages/LibraryPage";
-import { TeachersPage } from "@/pages/TeachersPage";
-import { DashboardPage } from "@/pages/DashboardPage";
-import { SettingsPage } from "@/pages/SettingsPage";
-import { cn } from "@/lib/cn";
+import { unlockAudioOnGesture } from "@/audio/context";
 
-type Tab = "curriculum" | "library" | "teachers" | "dashboard" | "settings";
+const TodayPage = lazy(() => import("@/pages/TodayPage"));
+const CoursesPage = lazy(() => import("@/pages/CoursesPage"));
+const LibraryPage = lazy(() => import("@/pages/LibraryPage"));
+const RhythmPage = lazy(() => import("@/pages/RhythmPage"));
+const ProgressPage = lazy(() => import("@/pages/ProgressPage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const PracticePage = lazy(() => import("@/pages/PracticePage"));
 
-type Session =
-  | { type: "practice"; queue: ExerciseSpec[] }
-  | { type: "reading"; kind: ReadingKind }
-  | null;
+/** Keep engines (sound, backing, latency, theme, QWERTY input) in sync with settings. */
+function useEngineSync() {
+  const settings = useProgress((s) => s.settings);
+  const status = useInputStatus();
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "curriculum", label: "Curriculum" },
-  { id: "library", label: "Library" },
-  { id: "teachers", label: "Teachers" },
-  { id: "dashboard", label: "Progress" },
-  { id: "settings", label: "Settings" },
-];
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", settings.theme === "light" ? "#F6F4EF" : "#0C0D0F");
+  }, [settings.theme]);
 
-const TAB_IDS = TABS.map((t) => t.id);
+  useEffect(() => {
+    sound.setSource(settings.soundSource);
+  }, [settings.soundSource, status.midiOutReady]);
 
-function initialTab(): Tab {
-  const hash = typeof location !== "undefined" ? location.hash.replace("#", "") : "";
-  return (TAB_IDS as string[]).includes(hash) ? (hash as Tab) : "curriculum";
+  useEffect(() => {
+    setBackingRouting({ toNord: settings.backingToNord });
+  }, [settings.backingToNord]);
+
+  useEffect(() => {
+    inputBus.latencyMs = settings.latencyMs;
+  }, [settings.latencyMs]);
+
+  useEffect(() => {
+    if (settings.inputSource === "qwerty") inputBus.startQwerty();
+    else inputBus.stopQwerty();
+  }, [settings.inputSource]);
+
+  // Quiet device toasts.
+  const prevIn = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevIn.current === undefined) {
+      prevIn.current = status.inPortName;
+      return;
+    }
+    if (status.inPortName && status.inPortName !== prevIn.current) toast(`${status.inPortName} connected`);
+    else if (!status.inPortName && prevIn.current) toast(`${prevIn.current} disconnected`);
+    prevIn.current = status.inPortName;
+  }, [status.inPortName]);
 }
 
 export default function App() {
   useInitInput();
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const [session, setSession] = useState<Session>(null);
-  const inputSource = useProgress((s) => s.settings.inputSource);
+  useEngineSync();
+  const { parts } = useRoute();
+  const page = parts[0] ?? "today";
 
-  // Keep QWERTY listener in sync with the chosen input source.
   useEffect(() => {
-    if (inputSource === "qwerty") inputBus.startQwerty();
-    else inputBus.stopQwerty();
-    return () => inputBus.stopQwerty();
-  }, [inputSource]);
+    unlockAudioOnGesture();
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unlock") === "1") useProgress.getState().setSettings({ unlockAll: true });
+  }, []);
 
-  const startPractice = (queue: ExerciseSpec[]) => {
-    if (queue.length) setSession({ type: "practice", queue });
+  const full = page === "practice";
+  const screens: Record<string, React.ReactNode> = {
+    today: <TodayPage />,
+    courses: <CoursesPage />,
+    library: <LibraryPage />,
+    rhythm: <RhythmPage />,
+    progress: <ProgressPage />,
+    settings: <SettingsPage />,
+    practice: <PracticePage />,
   };
-  const startReading = (kind: ReadingKind) => setSession({ type: "reading", kind });
-  const exitSession = () => setSession(null);
 
   return (
-    <div className="min-h-full">
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🎹</span>
-            <span className="text-lg font-bold">Jazz Scale Trainer</span>
-          </div>
-          <nav className="order-3 flex w-full gap-1 sm:order-2 sm:w-auto">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setTab(t.id);
-                  setSession(null);
-                  if (typeof location !== "undefined") location.hash = t.id;
-                }}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  tab === t.id && !session
-                    ? "bg-sky-500 text-white"
-                    : "text-slate-300 hover:bg-white/10"
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
-          <div className="order-2 ml-auto flex items-center gap-3 sm:order-3">
-            <AidControl />
-            <MidiStatus />
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        {session?.type === "practice" ? (
-          <PracticeSession queue={session.queue} onExit={exitSession} />
-        ) : session?.type === "reading" ? (
-          <ReadingDrill kind={session.kind} onExit={exitSession} />
-        ) : tab === "curriculum" ? (
-          <CurriculumPage onPractice={startPractice} onReading={startReading} />
-        ) : tab === "library" ? (
-          <LibraryPage onPractice={startPractice} />
-        ) : tab === "teachers" ? (
-          <TeachersPage onPractice={startPractice} />
-        ) : tab === "dashboard" ? (
-          <DashboardPage onPractice={startPractice} />
-        ) : (
-          <SettingsPage />
-        )}
-      </main>
-    </div>
+    <TooltipProvider>
+      <div className="flex h-full bg-bg-0 text-fg-1">
+        {!full && <Sidebar active={page} />}
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <Suspense fallback={<div className="h-full" />}>{screens[page] ?? <TodayPage />}</Suspense>
+        </main>
+      </div>
+      <CommandPalette />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          classNames: {
+            toast: "!bg-surface-2 !border !border-line/[0.08] !text-fg-1 !rounded-card !shadow-e3 !font-sans",
+            description: "!text-fg-3",
+          },
+        }}
+      />
+    </TooltipProvider>
   );
 }

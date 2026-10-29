@@ -5,9 +5,9 @@ const mehldau: Teacher = {
   name: "Brad Mehldau",
   style: "Modern jazz",
   era: "contemporary",
-  color: "hsl(199 89% 48%)",
+  color: "hsl(206 32% 62%)",
   tagline: "Melodic minor colours, odd groupings, singing lines.",
-  bio: `I hear the piano as a contrapuntal, singing instrument. I love the ambiguity of melodic minor and its modes, and I like to displace lines across the bar so they breathe. Technique serves the line - the goal is always to sing through the horn, not to run patterns.`,
+  bio: `Treats the piano as a contrapuntal, singing instrument. The focus is the ambiguity of melodic minor and its modes, and lines displaced across the bar so they breathe. Technique serves the line; the goal is to sing, not to run patterns.`,
   philosophy: `Internalize the melodic minor modes until altered and lydian dominant are as natural as a major scale. Then play lines in groupings of 3 and 5 against a 4/4 pulse so the phrase floats. Keep the touch even and legato, and always shape a line toward a target note.`,
   scalarVocab: [
     "melodic-minor",

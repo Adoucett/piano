@@ -1,10 +1,11 @@
-# AGENTS.md - guide for AI agents (and humans) extending this app
+# AGENTS.md - guide for AI agents (and humans) extending Étude
 
 This file tells an automated agent everything needed to **add content** (teachers,
-lessons, scales, exercise patterns) to the Jazz Scale Trainer **without breaking
-the build**. Most additions are pure data files you can drop in - no UI or wiring
-changes required. You can even do it entirely from the GitHub web UI; every push
-to `main` triggers a build + test + deploy to GitHub Pages.
+lessons, scales, progressions, exercise patterns, rhythm drills) to Étude
+**without breaking the build**. Most additions are pure data files you can drop
+in - no UI or wiring changes required. You can do it entirely from the GitHub web
+UI; every push to `main` triggers type-check + tests + build + deploy to GitHub
+Pages.
 
 > Live site: https://adoucett.github.io/piano/ (Chrome/Edge for live MIDI)
 
@@ -12,8 +13,8 @@ to `main` triggers a build + test + deploy to GitHub Pages.
 
 1. Create a new file in `src/teachers/lessons/` named `<something>.lesson.ts`.
 2. Default-export a `LessonContribution` (`{ teacherId, lesson }`). Use only
-   valid `scaleId` and `patternId` values (lists below).
-3. Commit to `main`. CI builds, tests, and deploys automatically. Done.
+   valid `scaleId`, `patternId` and `progressionId` values (lists below).
+3. Commit to `main`. CI type-checks, tests, builds and deploys. Done.
 
 No central registry edit is needed - files are auto-discovered via
 `import.meta.glob` in [`src/teachers/registry.ts`](src/teachers/registry.ts).
@@ -22,21 +23,30 @@ No central registry edit is needed - files are auto-discovered via
 
 | Path | Responsibility |
 | --- | --- |
-| `src/theory/catalog.ts` | The scale catalog (`SCALES`), key lists, key orders. |
-| `src/theory/engine.ts` | Spelling, octave/clef layout, degree labels (uses `tonal`). |
-| `src/exercises/patterns.ts` | Exercise pattern generators + `buildExercise()`. |
-| `src/exercises/curriculum.ts` | The 10-level curriculum. |
+| `src/theory/catalog.ts` | Scale catalog (`SCALES`), key lists, key orders. |
+| `src/theory/engine.ts` | Spelling (`spellScale`, respelling of awkward notes), octave/clef layout, degree labels, chord-tone roles. |
+| `src/exercises/patterns.ts` | Pattern generators, `buildExercise()`, progression lines, `lineSwing()`. |
+| `src/exercises/progressions.ts` | Chord progressions (ii-V-I etc.) used by progression patterns. |
+| `src/exercises/tracks.ts` | The curriculum: four tracks (scales, reading, rhythm, vocab) x five tiers, with cross-track gates. |
+| `src/exercises/reading.ts` | Reading drills (landmarks, intervals, chords, shells/rootless voicings) with a Leitner box per staff region. |
+| `src/exercises/session.ts` | Builds the daily session (time, reading, focus, review). |
+| `src/rhythm/drills.ts` | Rhythm & time drills (pulse, subdivision, swing, polyrhythm, ...). |
+| `src/practice/*` | Input bus (MIDI/QWERTY on the audio clock), lookahead transport, matcher (wait/tempo modes), mastery tiers + SM-2 review + tempo ladder. |
+| `src/audio/*` | Shared AudioContext, sampled grand (smplr) + synth fallback, backing (bass/click). |
 | `src/teachers/types.ts` | `Teacher`, `Lesson`, `LessonStep`, `LessonContribution`. |
-| `src/teachers/registry.ts` | Auto-discovery of teachers + lesson contributions. |
+| `src/teachers/registry.ts` | Auto-discovery + validation of teachers and lesson contributions. |
 | `src/teachers/registry/*.teacher.ts` | One file per teacher (default export `Teacher`). |
 | `src/teachers/lessons/*.lesson.ts` | Standalone lessons merged onto a teacher. |
 | `src/teachers/resolve.ts` | Expands a lesson into concrete `ExerciseSpec[]`. |
-| `src/components/*` | Staff (VexFlow), keyboard, practice session, UI. |
-| `src/pages/*` | Curriculum, Library, Teachers, Dashboard, Settings. |
-| `src/store/progress.ts` | Zustand store: mastery, review queue, streak, settings. |
+| `src/components/StaffView.tsx` | VexFlow engraving, letter lane, chord-tone coloring, playhead. |
+| `src/components/KeyboardView.tsx` | Zoomable keyboard with scale/role labels. |
+| `src/components/practice/*` | Exercise, reading and rhythm runners; results sheet; timing meter. |
+| `src/pages/*` | Today, Courses, Library, Rhythm, Progress, Settings, Practice (full screen). |
+| `src/store/progress.ts` | Zustand store (persisted, versioned): mastery, review, settings, `unlockAll`. |
 
-Data flows: `catalog + key` -> `engine` (spelling) -> `patterns` (note sequence)
--> staff/keyboard + `matcher` (compares your MIDI) -> `progress` store.
+Data flow: `catalog + key` -> `engine` (spelling) -> `patterns` (note sequence)
+-> staff/keyboard + `matcher` (compares your MIDI against the transport clock)
+-> `mastery` -> `progress` store.
 
 ## Valid values (use these exact strings)
 
@@ -54,15 +64,42 @@ bebop-dominant, bebop-major, bebop-minor, bebop-melodic-minor
 
 ### Pattern ids (`patternId`) - from `src/exercises/patterns.ts`
 
+Scale patterns (work on any scale):
+
 ```
-ascending, descending, upDown, thirds, fourths,
-groups3, groups4, triads, sevenths, enclosures
+ascending, descending, upDown, downUp, thirds, thirdsDown, fourths,
+groups3, groups3Down, groups4, groups4Down, triads, sevenths,
+fromThird, fromFifth, fromSeventh,
+bebopFrom7, bebopFrom5, bebopFrom3,
+approachBelow, approachAbove, doubleChromatic, enclosures,
+sightLine            (seeded 4-bar reading line; 7-note major/minor/modes only)
+```
+
+Progression-only patterns (require `progressionId`):
+
+```
+digital1235, digital3567, guideTones
+```
+
+Any scale pattern can also be used with a `progressionId` - the line then runs
+over each chord in turn.
+
+### Progression ids (`progressionId`) - from `src/exercises/progressions.ts`
+
+```
+ii-V-I-major, ii-V-I-altered, ii-V-i-minor, V-i-spanish
+```
+
+### Track ids (`trackId`)
+
+```
+scales, reading, rhythm, vocab
 ```
 
 ### Keys and key orders
 
-- Keys (tonics): `C Db D Eb E F Gb G Ab A Bb B` (and sharp spellings like `F#`,
-  `C#` are accepted). Use flats for flat keys so spelling stays correct.
+- Keys (tonics): `C Db D Eb E F Gb G Ab A Bb B` (sharp spellings like `F#` are
+  accepted). Use flats for flat keys so spelling stays correct.
 - `keyOrder`: `"fifths" | "fourths" | "chromatic"` (see `keysForOrder()`).
 
 A `LessonStep` picks keys either with an explicit `keys: [...]` array **or** a
@@ -83,14 +120,27 @@ const contribution: LessonContribution = {
     id: "mehldau-tritone-subs", // globally unique
     title: "Tritone sub lines",
     summary: "One-line description shown on the card.",
-    order: 5, // sort order within the teacher's lessons
+    order: 5,          // sort order within the teacher's lessons
+    trackId: "vocab",  // optional: which track it reinforces
+    difficulty: 3,     // optional: 1..5
+    estMinutes: 12,    // optional: shown on the card
     steps: [
       {
         scaleId: "lydian-dominant",
         patternId: "sevenths",
         keyOrder: "fourths", // or keys: ["Db","Gb","B"]
         octaves: 2,
-        instruction: "What the teacher says for this step, in their voice.",
+        instruction: "What this step is for, in plain direct language.",
+      },
+      {
+        // A step over a progression: scaleId is the first chord's scale.
+        scaleId: "dorian",
+        patternId: "guideTones",
+        progressionId: "ii-V-I-major",
+        keys: ["C", "F", "Bb"],
+        rhythm: "swing", // optional: "straight" | "swing"
+        bpm: 120,        // optional suggested tempo
+        instruction: "3rds and 7ths only; move each voice by the nearest step.",
       },
     ],
   },
@@ -99,15 +149,19 @@ const contribution: LessonContribution = {
 export default contribution;
 ```
 
-That's it. See the working example
-[`src/teachers/lessons/mehldau-pentatonic-reharm.lesson.ts`](src/teachers/lessons/mehldau-pentatonic-reharm.lesson.ts).
+Working examples:
+[`mehldau-pentatonic-reharm.lesson.ts`](src/teachers/lessons/mehldau-pentatonic-reharm.lesson.ts),
+[`bebop-251-lines.lesson.ts`](src/teachers/lessons/bebop-251-lines.lesson.ts).
 
 ## Recipe 2 - Add a whole new teacher
 
 Create `src/teachers/registry/<name>.teacher.ts` with a default-exported
 `Teacher`. Full field reference is in
 [`src/teachers/types.ts`](src/teachers/types.ts) and
-[`src/teachers/README.md`](src/teachers/README.md). Minimum viable teacher:
+[`src/teachers/README.md`](src/teachers/README.md). Teachers are *style
+programs*: write bios in the third person ("This program works ..."), not as
+an impersonation of a real musician. The teacher page shows a footnote saying
+programs are written in the style of the musicians named, not endorsed by them.
 
 ```ts
 import type { Teacher } from "../types";
@@ -116,10 +170,10 @@ const teacher: Teacher = {
   id: "mcoy",                 // unique, lowercase
   name: "McCoy Tyner",
   style: "Modal jazz",
-  color: "hsl(265 70% 55%)",  // any CSS color; used for the avatar
+  color: "hsl(265 22% 64%)",  // keep it muted; used as a thin accent
   tagline: "Quartal voicings and pentatonic power.",
-  bio: "Full internal bio in their voice...",
-  philosophy: "How they teach...",
+  bio: "Third-person description of the program...",
+  philosophy: "How the program is structured...",
   scalarVocab: ["minor-pentatonic", "dorian", "major-pentatonic"],
   favoriteKeys: ["C", "F", "Bb"],
   signatureTips: ["Stack the scale in 4ths.", "..."],
@@ -141,63 +195,95 @@ export default teacher;
 
 ## Recipe 3 - Add a new scale
 
-Append an entry to `SCALES` in `src/theory/catalog.ts`. The only hard requirement
-is that `tonalName` is a scale type understood by `tonal`'s `Scale.get()` (run
-`Scale.get("C <tonalName>").notes` mentally - it must return notes). Spelling,
-intervals, and the formula are derived automatically.
+Append an entry to `SCALES` in `src/theory/catalog.ts`. Either `tonalName` must
+be a scale type known to `tonal` (`Scale.get("C <tonalName>").notes` returns
+notes), or give an explicit `intervals` formula.
 
 ```ts
 {
   id: "neapolitan-minor",
   name: "Neapolitan Minor",
-  tonalName: "neapolitan minor", // must be known to tonal
+  tonalName: "neapolitan minor",
   family: "harmonic-minor-modes", // see ScaleFamily union in src/types.ts
   chords: ["m"],
   tip: "Short practical tip.",
+  // Optional:
+  // intervals: ["1P","2m","3m","4P","5P","6m","7M"],
+  // degreeLabels: ["1","b2","b3","4","5","b6","7"], // how a player names them
+  // respell: true,     // respell double accidentals / E#, B#, Cb, Fb per note
+  // passingTone: 11,   // semitone of a bebop passing tone (kept off the beat)
 }
 ```
 
-New scale ids are immediately usable by teachers, lessons, the library, and the
-curriculum.
+New scale ids are immediately usable by teachers, lessons, the library and the
+command palette.
 
 ## Recipe 4 - Add an exercise pattern
 
-Add a `PatternDef` to `PATTERNS` and a `case` in `generateExercise()` in
+Add a `PatternDef` to `PATTERNS` and a `case` in the generator in
 `src/exercises/patterns.ts`, plus the id to the `PatternId` union in
-`src/types.ts`. A pattern is a pure function `(ScaleInfo) => NoteSpec[]`.
+`src/types.ts`. A pattern is a pure function of the `ScaleInfo` returning
+`NoteSpec[]`. Set `progressionOnly` for patterns that need a progression and
+`hideChords` for pure reading lines.
+
+## Recipe 5 - Add a progression or rhythm drill
+
+- Progressions: append to `src/exercises/progressions.ts` (chord roots relative
+  to the key, chord suffix, scale id per chord, beats).
+- Rhythm drills: append a `RhythmDrill` to `src/rhythm/drills.ts` and reference
+  its id from a rhythm unit in `src/exercises/tracks.ts` if it belongs to the
+  curriculum.
+
+## Deep links
+
+Useful for docs, lessons and testing:
+
+| Route | Opens |
+| --- | --- |
+| `#/today` | Today page |
+| `#/courses`, `#/courses/track/<trackId>`, `#/courses/teacher/<teacherId>` | Courses |
+| `#/library/<scaleId>` | Scale detail |
+| `#/practice/ex/<scaleId>/<key>/<patternId>/<octaves>` | One exercise, full screen |
+| `#/practice/prog/<progressionId>/<key>/<patternId>` | A progression exercise |
+| `#/practice/read/<unitId>` | A reading unit |
+| `#/practice/rhythm/<drillId>` | A rhythm drill |
+| `?unlock=1` | Unlocks everything (also in Settings > Progress) |
 
 ## Doing it from the GitHub web UI (drag & drop, no local setup)
 
 1. Go to the repo, navigate to `src/teachers/lessons/` (or the relevant folder).
-2. **Add file -> Create new file** (or **Upload files** to drag-and-drop).
+2. **Add file -> Create new file** (or **Upload files** to drag and drop).
 3. Name it `*.lesson.ts` and paste the contribution from Recipe 1.
 4. **Commit directly to `main`.**
-5. The **Deploy to GitHub Pages** Action runs automatically: it type-checks,
-   runs the test suite, builds, and publishes. Watch it under the repo's
-   **Actions** tab. On green, the change is live at the site URL within ~1 minute.
+5. The **Deploy to GitHub Pages** Action type-checks, runs tests, builds and
+   publishes. On green, the change is live within about a minute.
 
-If a push turns the Action red, it is almost always one of:
-- an unknown `scaleId`/`patternId` (typo - check the lists above),
+If the Action turns red, it is almost always one of:
+
+- an unknown `scaleId` / `patternId` / `progressionId` (typo - check the lists above),
+- a progression-only pattern used without a `progressionId`,
 - a duplicate `id`,
-- a TypeScript/JSON syntax error in the new file.
+- a TypeScript syntax error in the new file.
 
-The test suite (`src/teachers/registry.test.ts`) validates that every teacher
-and lesson references real scales and resolves to playable exercises, so these
-mistakes fail fast in CI with a clear message.
+`src/teachers/registry.test.ts` validates that every teacher and lesson
+references real scales, patterns and progressions and resolves to playable
+exercises, so these mistakes fail fast in CI with a clear message.
 
 ## Local workflow (optional)
 
 ```bash
 npm install
 npm run dev     # http://127.0.0.1:5174
-npm test        # theory spelling, patterns, matcher, teachers pipeline
+npm test        # theory, patterns, matcher, curriculum, teachers
+npx tsc --noEmit -p tsconfig.app.json   # type-check
 npm run build   # production build
 ```
 
 ## Conventions
 
 - Ids are unique, lowercase, hyphenated (`teacherId-topic`).
-- Instructions are written in the teacher's own voice.
+- Copy is direct and adult: say what the exercise trains and what to listen
+  for. No exclamation marks, no gamified praise.
 - Prefer flat spellings for flat keys so the staff reads correctly.
-- Keep lessons focused (a few steps); add more lessons rather than giant ones.
+- Keep lessons focused (2-4 steps); add more lessons rather than giant ones.
 - Do not commit secrets. `.env` is gitignored; use `.env.example` as the template.

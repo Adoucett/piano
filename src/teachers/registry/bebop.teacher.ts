@@ -2,12 +2,12 @@ import type { Teacher } from "../types";
 
 const bebop: Teacher = {
   id: "bebop",
-  name: "Dizzy Powell",
+  name: "Bud & Bird",
   style: "Bebop",
   era: "post-war jazz",
-  color: "hsl(16 90% 55%)",
+  color: "hsl(14 42% 60%)",
   tagline: "Eighth-note lines, chord tones on the beat, enclosures everywhere.",
-  bio: `Bebop is a language and the grammar is simple: run eighth notes, land your chord tones on the downbeats, and decorate everything with chromatic approaches. I live on the bebop scales and ii-V-I. Learn the vocabulary, then forget it and just talk.`,
+  bio: `Bebop is a language with a simple grammar: run eighth notes, land chord tones on the downbeats, and decorate everything with chromatic approaches. This program lives on the bebop scales and the ii-V-I. Learn the vocabulary, then forget it and just talk.`,
   philosophy: `Drill the bebop scales until the passing tone falls automatically and the chord tones hit the beat. Add enclosures - approach every target from above and below. Then string it over ii-V-I moving around the horn. Swing the eighths; this music has to breathe.`,
   scalarVocab: [
     "bebop-dominant",

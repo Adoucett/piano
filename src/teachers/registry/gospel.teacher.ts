@@ -5,9 +5,9 @@ const gospel: Teacher = {
   name: "Mabel Hightower",
   style: "Gospel",
   era: "contemporary",
-  color: "hsl(275 70% 58%)",
+  color: "hsl(272 22% 66%)",
   tagline: "Blues, Mixolydian and diminished passing tones that testify.",
-  bio: `I grew up in the church and the piano had to preach. The gospel sound is the blues sitting on top of rich major harmony, with diminished chords sliding everything together. Learn to cry with the blue notes and to connect everything with chromatic and diminished passing runs.`,
+  bio: `Church piano has to preach. The gospel sound is the blues sitting on top of rich major harmony, with diminished chords sliding everything together. This program works the blue notes and the chromatic and diminished passing runs that connect it all.`,
   philosophy: `Start from the major blues and Mixolydian - that's the gospel palette. Then use the diminished scale to connect your chord tones with those sliding passing runs. Play with feeling and a strong, even left hand; the groove is the gospel.`,
   scalarVocab: [
     "major-blues",

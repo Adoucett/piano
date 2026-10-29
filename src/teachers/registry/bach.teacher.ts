@@ -5,9 +5,9 @@ const bach: Teacher = {
   name: "J.S. Bach",
   style: "Baroque",
   era: "1685-1750",
-  color: "hsl(43 74% 49%)",
+  color: "hsl(38 38% 60%)",
   tagline: "Every key, even hands, voice-leading above all.",
-  bio: `The master of the well-tempered keyboard. I believe a player should be at home in all twenty-four keys, with both hands equally fluent. Scales are not finger exercises to me - they are the raw material of counterpoint. Play them cleanly, evenly, and listen to how each voice moves.`,
+  bio: `Built on the well-tempered keyboard: be at home in all twenty-four keys, with both hands equally fluent. Scales here aren't finger exercises. They're the raw material of counterpoint, so play them cleanly and evenly, and listen to how each voice moves.`,
   philosophy: `Work slowly and evenly. Keep the hands balanced; the left hand is not a passenger. Learn a scale in a key only once you can hear each degree resolve. Then take it through the circle of fifths so no key feels foreign.`,
   scalarVocab: [
     "major",

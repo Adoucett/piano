@@ -21,6 +21,25 @@ export default defineConfig(({ mode }) => ({
     outDir: "dist",
     emptyOutDir: true,
     target: "es2022",
-    chunkSizeWarningLimit: 8000,
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vexflow: ["vexflow/bravura"],
+          tonal: ["tonal"],
+          react: ["react", "react-dom", "zustand"],
+          ui: [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+            "@radix-ui/react-slider",
+            "@radix-ui/react-switch",
+            "@radix-ui/react-tooltip",
+            "cmdk",
+            "sonner",
+          ],
+        },
+      },
+    },
   },
 }));

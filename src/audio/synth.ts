@@ -1,62 +1,86 @@
 /**
- * Tiny Web Audio synth. Used to hear notes when the Nord isn't the output,
- * and to preview scales in the library. Not meant to sound great.
+ * Small offline synth: the last-resort sound when there is no Nord and the
+ * sampled piano can't load. Soft, piano-ish envelope on two partials.
  */
+import { getAudioContext, getMaster } from "./context";
 
 function midiToFreq(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
+interface Voice {
+  oscs: OscillatorNode[];
+  gain: GainNode;
+}
+
 export class Synth {
-  private ctx: AudioContext | null = null;
-  private master: GainNode | null = null;
-  private voices = new Map<number, { osc: OscillatorNode; gain: GainNode }>();
+  private voices = new Map<number, Voice>();
+  private bus: GainNode | null = null;
 
-  private ensure(): AudioContext {
-    if (!this.ctx) {
-      this.ctx = new AudioContext();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = 0.25;
-      this.master.connect(this.ctx.destination);
+  private out(): GainNode {
+    if (!this.bus) {
+      const ctx = getAudioContext();
+      this.bus = ctx.createGain();
+      this.bus.gain.value = 0.22;
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 3200;
+      this.bus.connect(lp).connect(getMaster());
     }
-    if (this.ctx.state === "suspended") void this.ctx.resume();
-    return this.ctx;
+    return this.bus;
   }
 
-  noteOn(midi: number, velocity = 80) {
-    const ctx = this.ensure();
-    if (this.voices.has(midi)) this.noteOff(midi);
-    const osc = ctx.createOscillator();
+  noteOn(midi: number, velocity = 80, when?: number) {
+    const ctx = getAudioContext();
+    const t = when ?? ctx.currentTime;
+    if (this.voices.has(midi)) this.noteOff(midi, t);
     const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.value = midiToFreq(midi);
+    const f = midiToFreq(midi);
+    const oscs = [
+      Object.assign(ctx.createOscillator(), { type: "triangle" as OscillatorType }),
+      Object.assign(ctx.createOscillator(), { type: "sine" as OscillatorType }),
+    ];
+    oscs[0].frequency.value = f;
+    oscs[1].frequency.value = f * 2;
+    const partial = ctx.createGain();
+    partial.gain.value = 0.18;
+    oscs[0].connect(gain);
+    oscs[1].connect(partial).connect(gain);
     const level = (velocity / 127) * 0.9;
-    const now = ctx.currentTime;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(level, now + 0.01);
-    osc.connect(gain).connect(this.master!);
-    osc.start();
-    this.voices.set(midi, { osc, gain });
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(level, t + 0.006);
+    gain.gain.exponentialRampToValueAtTime(level * 0.35, t + 0.6);
+    gain.gain.exponentialRampToValueAtTime(level * 0.12, t + 3);
+    gain.connect(this.out());
+    oscs.forEach((o) => o.start(t));
+    this.voices.set(midi, { oscs, gain });
   }
 
-  noteOff(midi: number) {
+  noteOff(midi: number, when?: number) {
     const v = this.voices.get(midi);
-    if (!v || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    v.gain.gain.cancelScheduledValues(now);
-    v.gain.gain.setValueAtTime(v.gain.gain.value, now);
-    v.gain.gain.linearRampToValueAtTime(0, now + 0.08);
-    v.osc.stop(now + 0.1);
+    if (!v) return;
+    const ctx = getAudioContext();
+    const t = when ?? ctx.currentTime;
+    v.gain.gain.cancelScheduledValues(t);
+    v.gain.gain.setTargetAtTime(0, t, 0.06);
+    v.oscs.forEach((o) => o.stop(t + 0.4));
     this.voices.delete(midi);
   }
 
-  /** Play a sequence of midi notes with a fixed note length. */
-  async play(notes: number[], noteMs = 300, velocity = 80): Promise<void> {
-    for (const n of notes) {
-      this.noteOn(n, velocity);
-      await new Promise((r) => setTimeout(r, noteMs));
-      this.noteOff(n);
-    }
+  /** Schedule a note with a fixed length (does not track as a held voice). */
+  play(midi: number, start: number, duration: number, velocity = 80) {
+    const ctx = getAudioContext();
+    const gain = ctx.createGain();
+    const osc = Object.assign(ctx.createOscillator(), { type: "triangle" as OscillatorType });
+    osc.frequency.value = midiToFreq(midi);
+    const level = (velocity / 127) * 0.9;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(level, start + 0.006);
+    gain.gain.exponentialRampToValueAtTime(level * 0.3, start + Math.max(0.1, duration));
+    gain.gain.setTargetAtTime(0, start + duration, 0.08);
+    osc.connect(gain).connect(this.out());
+    osc.start(start);
+    osc.stop(start + duration + 0.6);
   }
 
   allOff() {

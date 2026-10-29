@@ -44,6 +44,14 @@ export const SCALES: ScaleDef[] = [
     chords: ["mMaj7", "m6"],
     tip: "Jazz players use the ascending form both ways. The parent of a whole family of modes.",
   },
+  {
+    id: "harmonic-major",
+    name: "Harmonic Major",
+    tonalName: "harmonic major",
+    family: "harmonic-major-modes",
+    chords: ["maj7", "6"],
+    tip: "Major with a b6. The fourth parent scale: its iv chord is minor and its vii is a full diminished 7th.",
+  },
 
   // --- Modes of major ---
   {
@@ -173,7 +181,10 @@ export const SCALES: ScaleDef[] = [
     aka: ["Super Locrian", "Diminished whole-tone"],
     family: "melodic-minor-modes",
     chords: ["7alt"],
-    tip: "7th mode of melodic minor. Every tension on a dominant: b9 #9 #11 b13. The go-to V7 sound.",
+    intervals: ["1P", "2m", "3m", "3M", "5d", "6m", "7m"],
+    degreeLabels: ["1", "b9", "#9", "3", "#11", "b13", "b7"],
+    respell: true,
+    tip: "7th mode of melodic minor, spelled as a dominant: 1 b9 #9 3 #11 b13 b7. Melodic minor a half step above the root.",
   },
 
   // --- Modes of harmonic minor ---
@@ -193,6 +204,7 @@ export const SCALES: ScaleDef[] = [
     aka: ["Super Locrian bb7"],
     family: "harmonic-minor-modes",
     chords: ["dim7"],
+    respell: true,
     tip: "7th mode of harmonic minor.",
   },
 
@@ -203,6 +215,8 @@ export const SCALES: ScaleDef[] = [
     tonalName: "whole tone",
     family: "symmetric",
     chords: ["7#5", "aug"],
+    intervals: ["1P", "2M", "3M", "4A", "5A", "7m"],
+    respell: true,
     tip: "Six notes, all whole steps. Only two of them exist. Dreamy augmented sound.",
   },
   {
@@ -211,6 +225,7 @@ export const SCALES: ScaleDef[] = [
     tonalName: "half-whole diminished",
     aka: ["Dominant diminished"],
     family: "symmetric",
+    respell: true,
     chords: ["7b9", "13b9"],
     tip: "Starts with a half step. Use over a dominant 7 with b9/#9/#11/13.",
   },
@@ -220,6 +235,7 @@ export const SCALES: ScaleDef[] = [
     tonalName: "diminished",
     family: "symmetric",
     chords: ["dim7"],
+    respell: true,
     tip: "Starts with a whole step. Use over a diminished 7 chord.",
   },
   {
@@ -238,6 +254,7 @@ export const SCALES: ScaleDef[] = [
     tonalName: "bebop",
     family: "bebop",
     chords: ["7"],
+    passingTone: 11,
     tip: "Mixolydian + a passing major 7. Eighth notes land chord tones on the beat.",
   },
   {
@@ -245,8 +262,10 @@ export const SCALES: ScaleDef[] = [
     name: "Bebop Major",
     tonalName: "bebop major",
     family: "bebop",
-    chords: ["maj7", "6"],
-    tip: "Major scale + a passing #5 between the 5 and 6.",
+    chords: ["6", "maj7"],
+    intervals: ["1P", "2M", "3M", "4P", "5P", "6m", "6M", "7M"],
+    passingTone: 8,
+    tip: "Major + a passing b6. Descending from the root, 1-6-5-3 land on the beat: the major 6th / diminished sound (Barry Harris).",
   },
   {
     id: "bebop-minor",
@@ -254,7 +273,9 @@ export const SCALES: ScaleDef[] = [
     tonalName: "bebop minor",
     family: "bebop",
     chords: ["m7"],
-    tip: "Dorian + a passing major 3 between b3 and 4.",
+    intervals: ["1P", "2M", "3m", "4P", "5P", "6M", "7m", "7M"],
+    passingTone: 11,
+    tip: "Dorian + a passing major 7. Descending from the root, 1-b7-5-b3 land on the beat.",
   },
   {
     id: "bebop-melodic-minor",
@@ -262,7 +283,9 @@ export const SCALES: ScaleDef[] = [
     tonalName: "bebop locrian",
     family: "bebop",
     chords: ["m6", "mMaj7"],
-    tip: "Melodic-minor flavored bebop scale with a passing tone keeping chord tones on the beat.",
+    intervals: ["1P", "2M", "3m", "4P", "5P", "6m", "6M", "7M"],
+    passingTone: 8,
+    tip: "Melodic minor + a passing b6. Descending from the root, 1-6-5-b3 land on the beat: the minor 6th / diminished sound.",
   },
 ];
 
@@ -275,6 +298,33 @@ export function getScaleDef(id: string): ScaleDef {
   if (!def) throw new Error(`Unknown scale id: ${id}`);
   return def;
 }
+
+export const FAMILY_LABEL: Record<ScaleDef["family"], string> = {
+  major: "Major",
+  minor: "Minor",
+  "modes-major": "Modes of major",
+  "pentatonic-blues": "Pentatonic & blues",
+  "melodic-minor-modes": "Modes of melodic minor",
+  "harmonic-minor-modes": "Modes of harmonic minor",
+  "harmonic-major-modes": "Harmonic major",
+  symmetric: "Symmetric",
+  bebop: "Bebop",
+  advanced: "Advanced",
+};
+
+/** Display order for scale families. */
+export const FAMILY_ORDER: ScaleDef["family"][] = [
+  "major",
+  "minor",
+  "harmonic-major-modes",
+  "modes-major",
+  "bebop",
+  "melodic-minor-modes",
+  "harmonic-minor-modes",
+  "pentatonic-blues",
+  "symmetric",
+  "advanced",
+];
 
 /** The twelve keys, with preferred spelling of the tonic. */
 export const KEYS_SHARP = [

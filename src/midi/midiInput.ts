@@ -87,7 +87,8 @@ export class MidiInput {
     const status = data[0] & 0xf0;
     const d1 = data[1];
     const d2 = data[2] ?? 0;
-    const time = performance.now();
+    // The event's own timestamp is when the bytes arrived, not when JS got to them.
+    const time = e.timeStamp && e.timeStamp > 0 ? e.timeStamp : performance.now();
 
     if (status === 0x90 && d2 > 0) {
       // Note on

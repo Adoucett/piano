@@ -17,7 +17,7 @@ const teacher: Teacher = {
   style: "Neo-soul",
   color: "hsl(160 70% 45%)",
   tagline: "...",
-  bio: "...",                  // full internal bio, in their voice
+  bio: "...",                  // third-person description of the style program
   philosophy: "...",
   scalarVocab: ["dorian", "minor-pentatonic"], // scale ids from the catalog
   favoriteKeys: ["Eb", "Ab"],

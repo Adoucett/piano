@@ -1,5 +1,7 @@
 import type { Lesson, LessonContribution, Teacher } from "./types";
 import { SCALE_BY_ID } from "@/theory/catalog";
+import { PROGRESSION_BY_ID } from "@/exercises/progressions";
+import { PATTERN_BY_ID } from "@/exercises/patterns";
 
 /**
  * Teacher registry with zero-wiring extensibility.
@@ -72,7 +74,15 @@ function validateTeacher(teacher: Teacher) {
   };
   teacher.scalarVocab.forEach((id) => check(id, "scalarVocab"));
   teacher.lessons.forEach((lesson) =>
-    lesson.steps.forEach((step, i) => check(step.scaleId, `${lesson.id} step ${i}`))
+    lesson.steps.forEach((step, i) => {
+      check(step.scaleId, `${lesson.id} step ${i}`);
+      if (step.progressionId && !PROGRESSION_BY_ID[step.progressionId]) {
+        console.warn(`[teachers] ${teacher.id}: unknown progression "${step.progressionId}" in ${lesson.id} step ${i}`);
+      }
+      if (!PATTERN_BY_ID[step.patternId]) {
+        console.warn(`[teachers] ${teacher.id}: unknown pattern "${step.patternId}" in ${lesson.id} step ${i}`);
+      }
+    })
   );
 }
 

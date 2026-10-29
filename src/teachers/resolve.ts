@@ -19,6 +19,8 @@ export function lessonExercises(teacher: Teacher, lesson: Lesson): ExerciseSpec[
         key,
         patternId: step.patternId,
         octaves: step.octaves ?? 1,
+        startOctave: step.startOctave,
+        progressionId: step.progressionId,
         source: {
           kind: "teacher",
           teacherId: teacher.id,

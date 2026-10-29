@@ -1,30 +1,39 @@
 import type { Letter } from "@/types";
 
-/** Per-letter colors shared by the staff and the keyboard (boomwhacker-ish). */
+/**
+ * Muted per-letter colors (optional "letter" coloring mode). Deliberately
+ * low-chroma so the sheet stays calm; they are a crutch that fades first.
+ */
 export const LETTER_COLOR: Record<Letter, string> = {
-  C: "hsl(0 84% 60%)",
-  D: "hsl(24 95% 53%)",
-  E: "hsl(48 96% 53%)",
-  F: "hsl(142 71% 45%)",
-  G: "hsl(199 89% 48%)",
-  A: "hsl(243 75% 59%)",
-  B: "hsl(280 75% 60%)",
+  C: "rgb(176, 92, 84)",
+  D: "rgb(178, 124, 70)",
+  E: "rgb(160, 140, 64)",
+  F: "rgb(98, 140, 96)",
+  G: "rgb(78, 128, 150)",
+  A: "rgb(104, 106, 168)",
+  B: "rgb(140, 96, 150)",
 };
 
 export function letterColor(letter: string): string {
-  return LETTER_COLOR[letter?.[0]?.toUpperCase() as Letter] ?? "hsl(210 10% 70%)";
+  return LETTER_COLOR[letter?.[0]?.toUpperCase() as Letter] ?? "rgb(120,120,120)";
 }
 
-/** Practice-state colors. */
-export const STATE_COLOR = {
-  target: "hsl(43 96% 56%)",
-  correct: "hsl(142 71% 45%)",
-  wrong: "hsl(351 95% 60%)",
-  scale: "hsl(174 72% 56%)",
-  idle: "hsl(210 16% 76%)",
-};
+/**
+ * Pretty-print accidentals with proper glyphs. Safe on prose: only touches
+ * accidentals attached to a note letter (Eb, F#, Bbb) or a degree (b3, #11).
+ */
+export function prettyNote(text: string): string {
+  return text
+    .replace(/\b([A-G])(bb|b|##|#)(?![a-z])/g, (_, l: string, acc: string) => l + ACC[acc])
+    .replace(/(^|[\s(/,·–\-\d])(bb|b|#)(?=\d)/g, (_, pre: string, acc: string) => pre + ACC[acc]);
+}
 
-/** Pretty-print a note name with proper flat/sharp glyphs. */
-export function prettyNote(name: string): string {
-  return name.replace(/bb/g, "\uD834\uDD2B").replace(/b/g, "\u266D").replace(/##/g, "\uD834\uDD2A").replace(/#/g, "\u266F");
+const ACC: Record<string, string> = { bb: "𝄫", b: "♭", "##": "𝄪", "#": "♯" };
+
+/** Read a CSS custom property (an "r g b" triplet) as an rgb() color string. */
+export function cssRgb(el: Element, name: string, alpha = 1): string {
+  const v = getComputedStyle(el).getPropertyValue(name).trim();
+  const parts = v.split(/\s+/).map(Number);
+  if (parts.length !== 3 || parts.some((x) => Number.isNaN(x))) return alpha < 1 ? `rgba(0,0,0,${alpha})` : "rgb(0,0,0)";
+  return alpha < 1 ? `rgba(${parts.join(",")},${alpha})` : `rgb(${parts.join(",")})`;
 }

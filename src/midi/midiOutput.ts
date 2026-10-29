@@ -1,4 +1,4 @@
-/** Web MIDI output, for playing exercise demos back through the Nord. */
+/** Web MIDI output, for playing demos and backing through the Nord. */
 
 import type { MidiPort } from "./midiInput";
 
@@ -41,17 +41,24 @@ export class MidiOutput {
     return this.current != null;
   }
 
-  noteOn(note: number, velocity = 80) {
-    this.current?.send([0x90, note & 0x7f, velocity & 0x7f]);
+  get portName(): string | null {
+    return this.current?.name ?? null;
   }
 
-  noteOff(note: number) {
-    this.current?.send([0x80, note & 0x7f, 0]);
+  /** `channel` is 1-based. `at` is a performance.now() timestamp for scheduled sends. */
+  noteOn(note: number, velocity = 80, channel = 1, at?: number) {
+    this.current?.send([0x90 | ((channel - 1) & 0x0f), note & 0x7f, velocity & 0x7f], at);
   }
 
-  allOff() {
+  noteOff(note: number, channel = 1, at?: number) {
+    this.current?.send([0x80 | ((channel - 1) & 0x0f), note & 0x7f, 0], at);
+  }
+
+  allOff(channel = 1) {
     if (!this.current) return;
-    for (let n = 0; n < 128; n++) this.current.send([0x80, n, 0]);
+    const status = 0xb0 | ((channel - 1) & 0x0f);
+    this.current.send([status, 123, 0]); // All Notes Off
+    for (let n = 0; n < 128; n++) this.current.send([0x80 | ((channel - 1) & 0x0f), n, 0]);
   }
 }
 
